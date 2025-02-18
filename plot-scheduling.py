@@ -10,13 +10,12 @@ from scapy.all import *
 
 BASE_SZ = 18
 TEXT_COLOR = '#202020'
-
 label_font_size = 10
-axis_label_font_size = 10
+axis_label_font_size = 12
 marker_size = 5
 
 def config_style():
-    mpl.rcParams.update({'font.size': 10})
+    mpl.rcParams.update({'font.size': 12})
 
 def __config_base_style(base_size=BASE_SZ):
     """Customize plot aesthetics."""
@@ -84,6 +83,8 @@ filenames = ["CSMA_150_mean_latency.csv",
             "RR_2000_mean_latency.csv",
             "HBC_mean_latency.csv",
             "LLC_mean_latency.csv",
+            "HBC_dynamic_mean_latency.csv",
+            "LLC_dynamic_mean_latency.csv",
             ]
 
 filenames_p99 = ["CSMA_150_percentile_latency.csv",
@@ -92,14 +93,18 @@ filenames_p99 = ["CSMA_150_percentile_latency.csv",
             "RR_2000_percentile_latency.csv",
             "HBC_percentile_latency.csv",
             "LLC_percentile_latency.csv",
+            "HBC_dynamic_percentile_latency.csv",
+            "LLC_dynamic_percentile_latency.csv",
             ]
 
 labels = ["CSMA/CA",
         "LDRR",
         "RR, slot length = 400 $us$",
         "RR, slot length = 2000 $us$",
-        "HBC",
-        "LLC",
+        "HBP",
+        "LLP",
+        "HBP-dynamic",
+        "LLP-dynamic",
         ]
 
 colors = [
@@ -107,23 +112,39 @@ colors = [
     "tab:blue",
     "tab:purple",
     "tab:cyan",
-    "tab:brown",
-    "tab:orange"
+    "saddlebrown",
+    "g",
+    "saddlebrown",
+    "g"
 ]
 
 markers = [
+    ">",
     "o",
-    "s",
-    "s",
-    "s",
-    "P",
-    "P",
+    "o",
+    "o",
+    "",
+    "",
+    "",
+    "",
 ]
+
+# markers = [
+#     "",
+#     "",
+#     "",
+#     "",
+#     "",
+#     "",
+#     "",
+#     "",
+# ]
 
 
 # fig.set_size_inches(8, 2.5)
-fig.set_size_inches(7.5, 3)
-fig.subplots_adjust(top=0.8)
+# fig.set_size_inches(8, 2.8)
+fig.set_size_inches(8, 2.8)
+fig.subplots_adjust(top=0.8, wspace=0.4)
 
 def process_data(fpath):
     datapoints = []
@@ -158,10 +179,13 @@ for i in range(0, len(filenames)):
     headers, datapoints = process_data(data_path)
     xvalues = [x*964*8 for x in datapoints[0]]
     yvalues = [x/1e3 for x in datapoints[1]]
-    if (labels[i] == "HBC" or labels[i] == "LLC"):
-        ax1.plot(xvalues, yvalues, label=labels[i], color=colors[i], linestyle="dashed")
+    if ("HB" in labels[i] or "LL" in labels[i]):
+        if ("dynamic" in labels[i]):
+            ax1.plot(xvalues, yvalues, label=labels[i], color=colors[i], linestyle="dashed", linewidth=2)
+        else:
+            ax1.plot(xvalues, yvalues, label=labels[i], color=colors[i], linewidth=2)
     else:
-        ax1.plot(xvalues, yvalues, label=labels[i], color=colors[i])
+        ax1.plot(xvalues, yvalues, label=labels[i], color=colors[i], marker=markers[i], markersize=marker_size, linewidth=1.5)
 
 
 ax1.grid(zorder=-1)
@@ -170,7 +194,7 @@ ax1.set(xlabel='Per-UE load ($Mbps$)')
 ax1.set(ylabel='Mean latency ($ms$)')
 # ax1.legend()
 
-ax1.set_ylim([0, 35])
+ax1.set_ylim([0.2, 150])
 ax1.set_xlim([0, 60])
 
 
@@ -179,10 +203,13 @@ for i in range(0, len(filenames)):
     headers, datapoints = process_data(data_path)
     xvalues = [x*964*8 for x in datapoints[0]]
     yvalues = [x/1e3 for x in datapoints[1]]
-    if (labels[i] == "HBC" or labels[i] == "LLC"):
-        ax2.plot(xvalues, yvalues, label=labels[i], color=colors[i], linestyle="dashed")
+    if ("HB" in labels[i] or "LL" in labels[i]):
+        if ("dynamic" in labels[i]):
+            ax2.plot(xvalues, yvalues, label=labels[i], color=colors[i], linestyle="dashed", linewidth=2)
+        else:
+            ax2.plot(xvalues, yvalues, label=labels[i], color=colors[i], linewidth=2)
     else:
-        ax2.plot(xvalues, yvalues, label=labels[i], color=colors[i])
+        ax2.plot(xvalues, yvalues, label=labels[i], color=colors[i], marker=markers[i], markersize=marker_size, linewidth=1.5)
 
 
 ax2.grid(zorder=-1)
@@ -190,15 +217,23 @@ ax2.yaxis.label.set_size(axis_label_font_size)
 ax2.set(xlabel='Per-UE load ($Mbps$)')
 ax2.set(ylabel='P99 latency ($ms$)')
 
-ax2.set_ylim([0, 60])
+ax2.set_ylim([0.2, 150])
 ax2.set_xlim([0, 60])
 
 # ax2.legend(bbox_to_anchor=(1, 1))
 
-# ax1.xaxis.set_major_locator(plt.MultipleLocator(10))
-# ax2.xaxis.set_major_locator(plt.MultipleLocator(10))
-# ax1.xaxis.set_minor_locator(plt.MultipleLocator(5))
-# ax2.xaxis.set_minor_locator(plt.MultipleLocator(5))
+ax1.xaxis.set_major_locator(plt.MultipleLocator(10))
+ax2.xaxis.set_major_locator(plt.MultipleLocator(10))
+ax1.xaxis.set_minor_locator(plt.MultipleLocator(5))
+ax2.xaxis.set_minor_locator(plt.MultipleLocator(5))
+
+ax1.set_yscale('log')
+ax1.set_yticks([0.5, 1, 2, 4, 8, 16, 32, 64, 128])
+ax1.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+
+ax2.set_yscale('log')
+ax2.set_yticks([0.5, 1, 2, 4, 8, 16, 32, 64, 128])
+ax2.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
 
 
 # ax1.yaxis.set_major_locator(plt.MultipleLocator(5))
@@ -227,10 +262,11 @@ ax2.set_xlim([0, 60])
 # # ax2.set_xlim([0, 100])
 # # ax1.set_ylim([0, 0.125])
 # # ax2.set_ylim([0, 0.125])
-fig.legend(labels, loc="upper center", ncol = 3, fontsize=10)
+fig.legend(labels, loc="upper center", ncol = 4, fontsize=label_font_size)
+
 
 # fig.tight_layout()
-plt.savefig('scheduling-latency.pdf', bbox_inches='tight')
+plt.savefig('scheduling-rr-latency.pdf', bbox_inches='tight')
 
 # # show plot
 plt.show()
